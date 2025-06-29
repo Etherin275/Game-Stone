@@ -1,22 +1,37 @@
+
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-  <title>Arena Game</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Batu Gunting Kertas</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
   <script src="firebase-config.js" defer></script>
   <script src="script.js" defer></script>
 </head>
-<body>
-  <h2 id="welcome"></h2>
-  <div class="choices">
-    <button onclick="choose('batu')">🪨</button>
-    <button onclick="choose('gunting')">✂️</button>
-    <button onclick="choose('kertas')">📄</button>
+<body class="bg-gradient-to-br from-teal-500 to-emerald-400 min-h-screen text-white flex flex-col items-center justify-center px-4 py-6">
+
+  <h1 class="text-3xl font-bold mb-2">🪨 Gunting Kertas ✂️</h1>
+  <h2 id="welcome" class="text-xl mb-6">Selamat datang...</h2>
+
+  <!-- Pilihan -->
+  <div class="flex gap-6 mb-6">
+    <button onclick="choose('batu')" class="text-5xl hover:scale-110 transition">🪨</button>
+    <button onclick="choose('gunting')" class="text-5xl hover:scale-110 transition">✂️</button>
+    <button onclick="choose('kertas')" class="text-5xl hover:scale-110 transition">📄</button>
   </div>
-  <button onclick="fight()">Fight!</button>
-  <div id="result"></div>
+
+  <!-- Tombol Fight -->
+  <button onclick="fight()" class="bg-white text-teal-700 font-bold px-6 py-3 rounded-xl shadow-lg hover:bg-teal-200 transition mb-6">
+    ⚔️ Fight!
+  </button>
+
+  <!-- Hasil Pertandingan -->
+  <div id="result" class="text-center text-lg mt-4"></div>
+
 </body>
 </html>
+
