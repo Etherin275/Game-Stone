@@ -1,22 +1,51 @@
 
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-  <title>Login Game</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Login - Batu Gunting Kertas</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
   <script src="firebase-config.js" defer></script>
   <script src="script.js" defer></script>
 </head>
-<body>
-  <div class="login-box">
-    <h1>Login</h1>
-    <input type="text" id="username" placeholder="Username">
-    <input type="password" id="password" placeholder="Password">
-    <button onclick="login()">Login</button>
+<body class="bg-gradient-to-br from-indigo-500 to-pink-400 min-h-screen flex items-center justify-center text-white">
+
+  <div class="bg-white/20 backdrop-blur-lg shadow-lg rounded-2xl p-8 w-[90%] max-w-md text-center">
+    <h1 class="text-3xl font-bold mb-6">🪨✂️📄<br>Login Game</h1>
+
+    <input
+      type="text"
+      id="username"
+      placeholder="Username"
+      class="w-full mb-4 px-4 py-2 rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-white"
+    />
+
+    <input
+      type="password"
+      id="password"
+      placeholder="Password"
+      class="w-full mb-4 px-4 py-2 rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-white"
+    />
+
+    <button
+      onclick="login()"
+      class="w-full bg-white text-indigo-600 hover:bg-indigo-200 font-semibold px-4 py-2 rounded-lg transition duration-300"
+    >
+      Login
+    </button>
+
+    <p id="error" class="mt-4 text-red-100 hidden">Username atau Password salah!</p>
+
+    <div class="mt-6 text-xl">
+      <span class="mr-2">🪨</span>
+      <span class="mr-2">✂️</span>
+      <span>📄</span>
+    </div>
   </div>
+
 </body>
 </html>
-
