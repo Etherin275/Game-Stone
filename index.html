@@ -1,0 +1,595 @@
+<html class="scroll-smooth" lang="id">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <title>
+   Batu Gunting Kertas – Duel Rino vs Wina
+  </title>
+  <script src="https://cdn.tailwindcss.com">
+  </script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js">
+  </script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js">
+  </script>
+  <style>
+   /* Animations for choices interaction */
+    .animate-fight {
+      animation: fightAnim 1.2s ease forwards;
+    }
+    @keyframes fightAnim {
+      0% {
+        transform: translateX(0) scale(1);
+        opacity: 1;
+      }
+      50% {
+        transform: translateX(var(--move-x, 0)) scale(1.3);
+        opacity: 1;
+      }
+      100% {
+        transform: translateX(var(--move-x, 0)) scale(1);
+        opacity: 1;
+      }
+    }
+  </style>
+ </head>
+ <body class="bg-gradient-to-b from-indigo-900 via-indigo-800 to-indigo-700 min-h-screen flex flex-col items-center justify-center px-4">
+  <div class="w-full max-w-md bg-indigo-900/90 rounded-xl shadow-lg p-6 text-white" id="app">
+   <!-- Login Screen -->
+   <section class="space-y-6" id="login-screen">
+    <h1 class="text-3xl font-extrabold text-center mb-4">
+     Batu Gunting Kertas
+    </h1>
+    <h2 class="text-xl font-semibold text-center mb-6">
+     Duel Rino vs Wina
+    </h2>
+    <form class="space-y-4" id="login-form">
+     <div>
+      <label class="block mb-1 font-semibold" for="username">
+       Username
+      </label>
+      <input autocomplete="off" class="w-full rounded-md px-3 py-2 text-indigo-900 font-semibold" id="username" name="username" placeholder="rino atau wina" required="" type="text"/>
+     </div>
+     <div>
+      <label class="block mb-1 font-semibold" for="password">
+       Password
+      </label>
+      <input autocomplete="off" class="w-full rounded-md px-3 py-2 text-indigo-900 font-semibold" id="password" name="password" placeholder="wina&amp;rino" required="" type="password"/>
+     </div>
+     <button class="w-full bg-indigo-600 hover:bg-indigo-700 transition rounded-md py-2 font-bold text-white" type="submit">
+      Login
+     </button>
+    </form>
+    <p class="text-red-400 text-center font-semibold" id="login-error">
+    </p>
+   </section>
+   <!-- Game Screen -->
+   <section class="hidden flex flex-col space-y-6" id="game-screen">
+    <div class="flex justify-between items-center">
+     <h2 class="text-2xl font-extrabold">
+      Batu Gunting Kertas
+     </h2>
+     <button aria-label="Logout" class="text-indigo-300 hover:text-white font-semibold focus:outline-none" id="logout-btn" title="Logout">
+      <i class="fas fa-sign-out-alt fa-lg">
+      </i>
+     </button>
+    </div>
+    <div class="bg-indigo-800 rounded-lg p-4 flex flex-col space-y-4">
+     <div class="flex justify-between items-center">
+      <div class="flex flex-col items-center w-1/2">
+       <p class="font-semibold text-lg" id="player1-name">
+        Rino
+       </p>
+       <p class="text-indigo-300 text-sm">
+        Skor
+       </p>
+       <p aria-live="polite" class="text-3xl font-extrabold text-indigo-100 select-none" id="player1-score">
+        0
+       </p>
+      </div>
+      <div class="flex flex-col items-center w-1/2">
+       <p class="font-semibold text-lg" id="player2-name">
+        Wina
+       </p>
+       <p class="text-indigo-300 text-sm">
+        Skor
+       </p>
+       <p aria-live="polite" class="text-3xl font-extrabold text-indigo-100 select-none" id="player2-score">
+        0
+       </p>
+      </div>
+     </div>
+     <div class="flex justify-center space-x-6">
+      <div class="flex flex-col items-center w-1/2">
+       <p class="mb-2 font-semibold" id="your-turn-label">
+        Giliran Anda
+       </p>
+       <div class="h-24 w-24 rounded-lg bg-indigo-700 flex items-center justify-center text-indigo-300 text-xl font-bold select-none" id="your-choice">
+        -
+       </div>
+      </div>
+      <div class="flex flex-col items-center w-1/2">
+       <p class="mb-2 font-semibold" id="opponent-turn-label">
+        Giliran Lawan
+       </p>
+       <div class="h-24 w-24 rounded-lg bg-indigo-700 flex items-center justify-center text-indigo-300 text-xl font-bold select-none" id="opponent-choice">
+        -
+       </div>
+      </div>
+     </div>
+     <div>
+      <p aria-live="polite" class="text-center text-indigo-300 font-semibold mb-3" id="status-text" role="status">
+      </p>
+      <div aria-label="Pilih Batu, Gunting, atau Kertas" class="flex justify-center space-x-6" id="choices-container" role="radiogroup">
+       <button aria-checked="false" aria-label="Pilih Batu" class="choice-btn bg-indigo-600 hover:bg-indigo-500 rounded-lg p-4 flex flex-col items-center justify-center w-24 h-24 focus:outline-none focus:ring-4 focus:ring-indigo-400" data-choice="batu" role="radio" tabindex="0">
+        <img alt="Ilustrasi batu berwarna abu-abu dengan tekstur kasar" aria-hidden="true" class="mb-1" draggable="false" height="64" src="https://storage.googleapis.com/a1aa/image/62e614c4-c14d-4913-914a-575a839010ff.jpg" width="64"/>
+        <span class="text-white font-semibold select-none">
+         Batu
+        </span>
+       </button>
+       <button aria-checked="false" aria-label="Pilih Gunting" class="choice-btn bg-indigo-600 hover:bg-indigo-500 rounded-lg p-4 flex flex-col items-center justify-center w-24 h-24 focus:outline-none focus:ring-4 focus:ring-indigo-400" data-choice="gunting" role="radio" tabindex="-1">
+        <img alt="Ilustrasi gunting berwarna perak dengan gagang biru" aria-hidden="true" class="mb-1" draggable="false" height="64" src="https://storage.googleapis.com/a1aa/image/ce2b3c76-793e-4ac6-567b-27253da84341.jpg" width="64"/>
+        <span class="text-white font-semibold select-none">
+         Gunting
+        </span>
+       </button>
+       <button aria-checked="false" aria-label="Pilih Kertas" class="choice-btn bg-indigo-600 hover:bg-indigo-500 rounded-lg p-4 flex flex-col items-center justify-center w-24 h-24 focus:outline-none focus:ring-4 focus:ring-indigo-400" data-choice="kertas" role="radio" tabindex="-1">
+        <img alt="Ilustrasi kertas putih dengan lipatan di sudut kanan atas" aria-hidden="true" class="mb-1" draggable="false" height="64" src="https://storage.googleapis.com/a1aa/image/7465dcbb-cbf3-487e-9b5c-55cb40e2b684.jpg" width="64"/>
+        <span class="text-white font-semibold select-none">
+         Kertas
+        </span>
+       </button>
+      </div>
+     </div>
+     <div class="flex justify-center">
+      <button aria-label="Reset permainan" class="bg-red-600 hover:bg-red-700 rounded-md px-6 py-2 font-semibold transition focus:outline-none focus:ring-4 focus:ring-red-400" id="reset-btn">
+       Reset Permainan
+      </button>
+     </div>
+    </div>
+   </section>
+  </div>
+  <script>
+   // Firebase config - replace with your own Firebase project config
+    const firebaseConfig = {
+      apiKey: "AIzaSyD7q6Xq6Xq6Xq6Xq6Xq6Xq6Xq6Xq6Xq6Xq6",
+      authDomain: "batu-gunting-kertas-rino-wina.firebaseapp.com",
+      databaseURL: "https://batu-gunting-kertas-rino-wina-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "batu-gunting-kertas-rino-wina",
+      storageBucket: "batu-gunting-kertas-rino-wina.appspot.com",
+      messagingSenderId: "1234567890",
+      appId: "1:1234567890:web:abcdef1234567890abcdef12"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // Static room ID
+    const ROOM_ID = "duel-rino-vs-wina";
+
+    // Valid users and password
+    const validUsers = {
+      rino: "wina&rino",
+      wina: "wina&rino",
+    };
+
+    // Elements
+    const loginScreen = document.getElementById("login-screen");
+    const gameScreen = document.getElementById("game-screen");
+    const loginForm = document.getElementById("login-form");
+    const loginError = document.getElementById("login-error");
+    const logoutBtn = document.getElementById("logout-btn");
+
+    const player1NameEl = document.getElementById("player1-name");
+    const player2NameEl = document.getElementById("player2-name");
+    const player1ScoreEl = document.getElementById("player1-score");
+    const player2ScoreEl = document.getElementById("player2-score");
+
+    const yourChoiceEl = document.getElementById("your-choice");
+    const opponentChoiceEl = document.getElementById("opponent-choice");
+    const statusTextEl = document.getElementById("status-text");
+    const choicesContainer = document.getElementById("choices-container");
+    const resetBtn = document.getElementById("reset-btn");
+
+    // Game state
+    let currentUser = null; // "rino" or "wina"
+    let opponentUser = null;
+    let yourChoice = null;
+    let opponentChoice = null;
+    let scores = { rino: 0, wina: 0 };
+    let isChoosing = true;
+
+    // Choice icons and alt text for animation
+    const choiceData = {
+      batu: {
+        label: "Batu",
+        icon: "🪨",
+        alt: "Ilustrasi batu berwarna abu-abu dengan tekstur kasar",
+        imgSrc: "https://placehold.co/64x64?text=🪨",
+      },
+      gunting: {
+        label: "Gunting",
+        icon: "✂️",
+        alt: "Ilustrasi gunting berwarna perak dengan gagang biru",
+        imgSrc: "https://placehold.co/64x64?text=✂️",
+      },
+      kertas: {
+        label: "Kertas",
+        icon: "📄",
+        alt: "Ilustrasi kertas putih dengan lipatan di sudut kanan atas",
+        imgSrc: "https://placehold.co/64x64?text=📄",
+      },
+    };
+
+    // Determine winner: returns "rino", "wina", or "draw"
+    function determineWinner(choice1, choice2) {
+      if (choice1 === choice2) return "draw";
+      if (
+        (choice1 === "batu" && choice2 === "gunting") ||
+        (choice1 === "gunting" && choice2 === "kertas") ||
+        (choice1 === "kertas" && choice2 === "batu")
+      ) {
+        return currentUser === "rino" ? "rino" : "wina";
+      } else {
+        return currentUser === "rino" ? "wina" : "rino";
+      }
+    }
+
+    // Determine winner with player perspective (player1 = rino, player2 = wina)
+    function determineWinnerByChoices(p1Choice, p2Choice) {
+      if (p1Choice === p2Choice) return "draw";
+      if (
+        (p1Choice === "batu" && p2Choice === "gunting") ||
+        (p1Choice === "gunting" && p2Choice === "kertas") ||
+        (p1Choice === "kertas" && p2Choice === "batu")
+      ) {
+        return "rino";
+      } else {
+        return "wina";
+      }
+    }
+
+    // Animate fight interaction
+    function animateFight(yourChoiceBtn, opponentChoiceBtn, winner) {
+      // Clear previous animations
+      yourChoiceBtn.classList.remove("animate-fight");
+      opponentChoiceBtn.classList.remove("animate-fight");
+
+      // Determine animation directions and winner
+      // We will move your choice to right (+50px), opponent to left (-50px)
+      yourChoiceBtn.style.setProperty("--move-x", "50px");
+      opponentChoiceBtn.style.setProperty("--move-x", "-50px");
+
+      // Add animation class
+      yourChoiceBtn.classList.add("animate-fight");
+      opponentChoiceBtn.classList.add("animate-fight");
+
+      // Highlight winner's choice with green glow, loser with red glow, draw with gray
+      if (winner === "draw") {
+        yourChoiceBtn.classList.add("ring-4", "ring-gray-400");
+        opponentChoiceBtn.classList.add("ring-4", "ring-gray-400");
+      } else if (
+        (currentUser === "rino" && winner === "rino") ||
+        (currentUser === "wina" && winner === "wina")
+      ) {
+        yourChoiceBtn.classList.add("ring-4", "ring-green-400");
+        opponentChoiceBtn.classList.add("ring-4", "ring-red-600");
+      } else {
+        yourChoiceBtn.classList.add("ring-4", "ring-red-600");
+        opponentChoiceBtn.classList.add("ring-4", "ring-green-400");
+      }
+
+      // Remove animation and rings after animation ends
+      setTimeout(() => {
+        yourChoiceBtn.classList.remove("animate-fight", "ring-4", "ring-green-400", "ring-red-600", "ring-gray-400");
+        opponentChoiceBtn.classList.remove("animate-fight", "ring-4", "ring-green-400", "ring-red-600", "ring-gray-400");
+      }, 1300);
+    }
+
+    // Update UI scores
+    function updateScoresUI() {
+      player1ScoreEl.textContent = scores.rino;
+      player2ScoreEl.textContent = scores.wina;
+    }
+
+    // Update choices UI
+    function updateChoicesUI() {
+      // Your choice
+      if (yourChoice) {
+        yourChoiceEl.innerHTML = `
+          <img src="${choiceData[yourChoice].imgSrc}" alt="${choiceData[yourChoice].alt}" class="w-16 h-16 mx-auto" draggable="false" />
+          <p class="mt-1 font-semibold">${choiceData[yourChoice].label}</p>
+        `;
+      } else {
+        yourChoiceEl.textContent = "-";
+      }
+
+      // Opponent choice
+      if (opponentChoice) {
+        opponentChoiceEl.innerHTML = `
+          <img src="${choiceData[opponentChoice].imgSrc}" alt="${choiceData[opponentChoice].alt}" class="w-16 h-16 mx-auto" draggable="false" />
+          <p class="mt-1 font-semibold">${choiceData[opponentChoice].label}</p>
+        `;
+      } else {
+        opponentChoiceEl.textContent = "-";
+      }
+    }
+
+    // Reset choices UI highlight on buttons
+    function resetChoiceButtons() {
+      const buttons = choicesContainer.querySelectorAll("button.choice-btn");
+      buttons.forEach((btn) => {
+        btn.setAttribute("aria-checked", "false");
+        btn.classList.remove("bg-indigo-500", "ring-4", "ring-green-400", "ring-red-600");
+        btn.disabled = false;
+        btn.tabIndex = -1;
+      });
+      // Enable all buttons and reset tabIndex
+      buttons.forEach((btn) => {
+        btn.disabled = false;
+        btn.tabIndex = 0;
+      });
+    }
+
+    // Disable all choice buttons
+    function disableChoiceButtons() {
+      const buttons = choicesContainer.querySelectorAll("button.choice-btn");
+      buttons.forEach((btn) => {
+        btn.disabled = true;
+        btn.tabIndex = -1;
+      });
+    }
+
+    // Set aria-checked for selected choice button
+    function setSelectedChoiceButton(choice) {
+      const buttons = choicesContainer.querySelectorAll("button.choice-btn");
+      buttons.forEach((btn) => {
+        if (btn.dataset.choice === choice) {
+          btn.setAttribute("aria-checked", "true");
+          btn.classList.add("bg-indigo-500");
+          btn.tabIndex = 0;
+        } else {
+          btn.setAttribute("aria-checked", "false");
+          btn.classList.remove("bg-indigo-500");
+          btn.tabIndex = -1;
+        }
+      });
+    }
+
+    // Update status text and turn labels
+    function updateStatusText(text) {
+      statusTextEl.textContent = text;
+    }
+
+    // Update turn labels
+    function updateTurnLabels() {
+      if (isChoosing) {
+        document.getElementById("your-turn-label").textContent = "Giliran Anda";
+        document.getElementById("opponent-turn-label").textContent = "Giliran Lawan";
+      } else {
+        document.getElementById("your-turn-label").textContent = "Pilihan Anda";
+        document.getElementById("opponent-turn-label").textContent = "Pilihan Lawan";
+      }
+    }
+
+    // Listen to Firebase game data changes
+    function listenGameData() {
+      const gameRef = db.ref(`rooms/${ROOM_ID}`);
+
+      gameRef.on("value", (snapshot) => {
+        const data = snapshot.val();
+        if (!data) return;
+
+        // Update scores
+        if (data.scores) {
+          scores = data.scores;
+          updateScoresUI();
+        }
+
+        // Update choices
+        if (data.choices) {
+          yourChoice = data.choices[currentUser] || null;
+          opponentChoice = data.choices[opponentUser] || null;
+          updateChoicesUI();
+          setSelectedChoiceButton(yourChoice);
+        } else {
+          yourChoice = null;
+          opponentChoice = null;
+          updateChoicesUI();
+          resetChoiceButtons();
+        }
+
+        // Update game status
+        if (yourChoice && opponentChoice) {
+          isChoosing = false;
+          updateTurnLabels();
+
+          // Determine winner
+          const winner = determineWinnerByChoices(
+            data.choices.rino,
+            data.choices.wina
+          );
+
+          // Animate fight
+          const yourBtn = choicesContainer.querySelector(
+            `button[data-choice="${yourChoice}"]`
+          );
+          const oppBtn = choicesContainer.querySelector(
+            `button[data-choice="${opponentChoice}"]`
+          );
+
+          if (yourBtn && oppBtn) {
+            animateFight(yourBtn, oppBtn, winner);
+          }
+
+          // Show result text
+          if (winner === "draw") {
+            updateStatusText("Seri! Pilih lagi.");
+          } else if (winner === currentUser) {
+            updateStatusText("Anda menang! 🎉");
+          } else {
+            updateStatusText("Anda kalah! 😞");
+          }
+
+          disableChoiceButtons();
+        } else {
+          isChoosing = true;
+          updateTurnLabels();
+          updateStatusText("Silakan pilih Batu, Gunting, atau Kertas.");
+          if (!yourChoice) {
+            resetChoiceButtons();
+          } else {
+            setSelectedChoiceButton(yourChoice);
+            disableChoiceButtons();
+          }
+        }
+      });
+    }
+
+    // Write choice to Firebase
+    function writeChoice(choice) {
+      const choiceRef = db.ref(`rooms/${ROOM_ID}/choices/${currentUser}`);
+      choiceRef.set(choice);
+    }
+
+    // Write scores to Firebase
+    function writeScores(newScores) {
+      const scoresRef = db.ref(`rooms/${ROOM_ID}/scores`);
+      scoresRef.set(newScores);
+    }
+
+    // Reset game data in Firebase
+    function resetGameData() {
+      const roomRef = db.ref(`rooms/${ROOM_ID}`);
+      roomRef.set({
+        scores: { rino: 0, wina: 0 },
+        choices: { rino: null, wina: null },
+      });
+    }
+
+    // On login form submit
+    loginForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      loginError.textContent = "";
+      const username = loginForm.username.value.trim().toLowerCase();
+      const password = loginForm.password.value;
+
+      if (!(username in validUsers)) {
+        loginError.textContent = "Username tidak valid.";
+        return;
+      }
+      if (validUsers[username] !== password) {
+        loginError.textContent = "Password salah.";
+        return;
+      }
+
+      currentUser = username;
+      opponentUser = currentUser === "rino" ? "wina" : "rino";
+
+      // Show game screen
+      loginScreen.classList.add("hidden");
+      gameScreen.classList.remove("hidden");
+
+      // Set player names
+      player1NameEl.textContent = "Rino";
+      player2NameEl.textContent = "Wina";
+
+      // Initialize game data if not exists
+      const roomRef = db.ref(`rooms/${ROOM_ID}`);
+      roomRef.once("value").then((snapshot) => {
+        if (!snapshot.exists()) {
+          resetGameData();
+        } else {
+          // If scores or choices missing, reset
+          const data = snapshot.val();
+          if (!data.scores || !data.choices) {
+            resetGameData();
+          }
+        }
+      });
+
+      listenGameData();
+    });
+
+    // On logout
+    logoutBtn.addEventListener("click", () => {
+      currentUser = null;
+      opponentUser = null;
+      yourChoice = null;
+      opponentChoice = null;
+      scores = { rino: 0, wina: 0 };
+      isChoosing = true;
+
+      // Reset UI
+      loginForm.reset();
+      loginError.textContent = "";
+      resetChoiceButtons();
+      updateScoresUI();
+      updateChoicesUI();
+      updateStatusText("");
+      updateTurnLabels();
+
+      // Show login screen
+      gameScreen.classList.add("hidden");
+      loginScreen.classList.remove("hidden");
+
+      // Remove Firebase listeners
+      const gameRef = db.ref(`rooms/${ROOM_ID}`);
+      gameRef.off();
+    });
+
+    // On choice button click
+    choicesContainer.addEventListener("click", (e) => {
+      if (!isChoosing) return;
+      const btn = e.target.closest("button.choice-btn");
+      if (!btn) return;
+      if (btn.disabled) return;
+
+      const choice = btn.dataset.choice;
+      if (!choice) return;
+
+      yourChoice = choice;
+      setSelectedChoiceButton(choice);
+      writeChoice(choice);
+    });
+
+    // Keyboard navigation for choices (space/enter to select)
+    choicesContainer.addEventListener("keydown", (e) => {
+      if (!isChoosing) return;
+      const btn = e.target.closest("button.choice-btn");
+      if (!btn) return;
+
+      const buttons = Array.from(choicesContainer.querySelectorAll("button.choice-btn"));
+      let index = buttons.indexOf(btn);
+
+      if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+        e.preventDefault();
+        let nextIndex = (index + 1) % buttons.length;
+        buttons[nextIndex].focus();
+      } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+        e.preventDefault();
+        let prevIndex = (index - 1 + buttons.length) % buttons.length;
+        buttons[prevIndex].focus();
+      } else if (e.key === " " || e.key === "Enter") {
+        e.preventDefault();
+        btn.click();
+      }
+    });
+
+    // On reset button click
+    resetBtn.addEventListener("click", () => {
+      resetGameData();
+      updateStatusText("Permainan direset. Silakan pilih lagi.");
+    });
+
+    // Accessibility: focus first choice button on game screen show
+    const observer = new MutationObserver(() => {
+      if (!loginScreen.classList.contains("hidden")) return;
+      const firstBtn = choicesContainer.querySelector("button.choice-btn");
+      if (firstBtn) firstBtn.focus();
+    });
+    observer.observe(gameScreen, { attributes: true, attributeFilter: ["class"] });
+  </script>
+ </body>
+</html>
